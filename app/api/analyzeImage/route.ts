@@ -14,37 +14,29 @@ const analysisSchema = z.object({
 }));
 
 export async function POST(req: Request) {
-  console.log('POST function called');
   try {
     const formData = await req.formData();
-    console.log('FormData received');
-
-    const file = formData.get('image') as File;
-    console.log('File object:', file);
+    const file = formData.get('image') as File | null;
 
     if (!file) {
-      console.log('No file uploaded');
       return NextResponse.json({ error: 'No file uploaded' }, { status: 400 });
     }
 
-    console.log('File received:', file.name, file.type, file.size);
-
     const maxSize = 2 * 1024 * 1024; // 2MB
     if (file.size > maxSize) {
-      console.log('File size exceeds limit');
       return NextResponse.json({ error: 'File size exceeds 2MB limit' }, { status: 400 });
     }
 
     const buffer = await file.arrayBuffer();
-    console.log('ArrayBuffer created');
-
     const base64Image = Buffer.from(buffer).toString('base64');
-    console.log('Base64 image created');
 
     // Add base64 validation check
     const decodedBuffer = Buffer.from(base64Image, 'base64');
     const isBase64Valid = decodedBuffer.length === buffer.byteLength;
-    console.log('Is base64 encoding valid?', isBase64Valid);
+
+    if (!isBase64Valid) {
+      return NextResponse.json({ error: 'Invalid base64 encoding' }, { status: 400 });
+    }
 
     // Step 1: Initial image analysis
     const initialResult = await generateText({
@@ -63,8 +55,6 @@ export async function POST(req: Request) {
       ],
     });
 
-    console.log('Initial analysis:', initialResult.text);
-
     // Step 2: Specialized analysis
     const specializedResult = await generateText({
       model: openai("gpt-4o-mini"),
@@ -82,23 +72,19 @@ export async function POST(req: Request) {
       ],
     });
 
-    console.log('Specialized analysis:', specializedResult.text);
-
     // Clean and parse the result
     const cleanedResult = cleanAndParseJSON(specializedResult.text);
     
-    console.log('Cleaned and parsed result:', cleanedResult);
-
     // Validate the parsed result
     const validatedResult = analysisSchema.parse(cleanedResult);
-
-    console.log('Validated result:', validatedResult);
 
     // Return the validated result as JSON
     return NextResponse.json(validatedResult);
   } catch (error) {
-    console.error('Error in POST function:', error);
-    return NextResponse.json({ error: `An error occurred while analyzing the image: ${error.message}` }, { status: 500 });
+    if (error instanceof Error) {
+      return NextResponse.json({ error: `An error occurred while analyzing the image: ${error.message}` }, { status: 500 });
+    }
+    return NextResponse.json({ error: 'An unknown error occurred' }, { status: 500 });
   }
 }
 
@@ -111,15 +97,12 @@ function cleanAndParseJSON(text: string): any {
     // Attempt to parse the cleaned text
     return JSON.parse(cleanedText);
   } catch (error) {
-    console.error('Error parsing JSON:', error);
-    
     // If parsing fails, attempt to extract JSON using regex
     const jsonMatch = cleanedText.match(/\{[\s\S]*\}/);
     if (jsonMatch) {
       try {
         return JSON.parse(jsonMatch[0]);
       } catch (innerError) {
-        console.error('Error parsing extracted JSON:', innerError);
         throw new Error('Unable to parse the analysis result');
       }
     } else {

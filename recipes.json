@@ -170,5 +170,102 @@
       "carbs": 40,
       "fat": 40
     }
+  },
+  {
+    "name": "Cheeseburger with Bacon",
+    "cuisine": "American",
+    "difficulty": "Easy",
+    "prepTime": 15,
+    "cookTime": 15,
+    "servings": 4,
+    "ingredients": [
+      {
+        "name": "Ground beef",
+        "amount": 1,
+        "unit": "pound"
+      },
+      {
+        "name": "Bacon",
+        "amount": 8,
+        "unit": "slices"
+      },
+      {
+        "name": "Cheddar cheese",
+        "amount": 4,
+        "unit": "slices"
+      },
+      {
+        "name": "Burger buns",
+        "amount": 4,
+        "unit": "units"
+      },
+      {
+        "name": "Lettuce",
+        "amount": 4,
+        "unit": "leaves"
+      },
+      {
+        "name": "Tomato",
+        "amount": 1,
+        "unit": "large"
+      },
+      {
+        "name": "Onion",
+        "amount": 1,
+        "unit": "medium"
+      },
+      {
+        "name": "Pickles",
+        "amount": 8,
+        "unit": "slices"
+      },
+      {
+        "name": "Ketchup",
+        "amount": 4,
+        "unit": "tablespoons"
+      },
+      {
+        "name": "Mustard",
+        "amount": 4,
+        "unit": "tablespoons"
+      },
+      {
+        "name": "Salt",
+        "amount": 1,
+        "unit": "teaspoon"
+      },
+      {
+        "name": "Black pepper",
+        "amount": 1,
+        "unit": "teaspoon"
+      }
+    ],
+    "preppingInstructions": [
+      "Preheat your grill or stovetop skillet over medium-high heat.",
+      "While the grill is heating, slice the tomato and onion into thin rings.",
+      "Prepare the lettuce by washing and patting it dry."
+    ],
+    "instructions": [
+      "In a mixing bowl, combine the ground beef with salt and black pepper. Form the mixture into four equal patties, making a slight indentation in the center of each to prevent puffing during cooking.",
+      "Cook the bacon in a skillet over medium heat until crispy. Remove and drain on paper towels.",
+      "Place the burger patties on the grill or skillet. Cook for about 3-4 minutes on one side, then flip them over.",
+      "After flipping, place a slice of cheddar cheese on each patty and cook for an additional 3-4 minutes, or until the cheese is melted and the burgers are cooked to your desired doneness.",
+      "While the burgers are cooking, toast the burger buns on the grill or in a toaster until golden brown.",
+      "Assemble the burgers: on the bottom half of each bun, layer lettuce, a burger patty with melted cheese, two slices of bacon, tomato, onion, and pickles. Spread ketchup and mustard on the top half of the bun before placing it on top.",
+      "Serve immediately with your favorite side dishes, such as fries or a salad."
+    ],
+    "tags": [
+      "beef",
+      "bacon",
+      "cheese",
+      "burger",
+      "American"
+    ],
+    "nutritionalInfo": {
+      "calories": 650,
+      "protein": 35,
+      "carbs": 40,
+      "fat": 40
+    }
   }
 ]

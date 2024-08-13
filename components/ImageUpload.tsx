@@ -1,11 +1,19 @@
 import React, { useCallback, useState } from 'react';
 import { useDropzone } from 'react-dropzone';
 import { motion } from 'framer-motion';
-import { Spinner } from './Spinner'; // Assume we have a Spinner component
+import { Spinner } from './Spinner';
 
 interface ImageUploadProps {
   onImageUpload: (file: File) => void;
   onSuggestionClick: (suggestion: string) => void;
+}
+
+interface AnalysisResult {
+  analysis?: {
+    type: string;
+    suggestions: string[];
+  };
+  error?: string;
 }
 
 const ImageUpload: React.FC<ImageUploadProps> = ({ onImageUpload, onSuggestionClick }) => {
@@ -18,13 +26,11 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onImageUpload, onSuggestionCl
     if (acceptedFiles && acceptedFiles.length > 0) {
       const file = acceptedFiles[0];
       
-      // Check file size (limit to 2MB)
       if (file.size > 2 * 1024 * 1024) {
         setError('File size exceeds 2MB limit.');
         return;
       }
 
-      // Check file type
       const allowedTypes = ['image/jpeg', 'image/png', 'image/gif'];
       if (!allowedTypes.includes(file.type)) {
         setError('Unsupported file type. Please upload a JPEG, PNG, or GIF image.');
@@ -37,49 +43,31 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onImageUpload, onSuggestionCl
       const formData = new FormData();
       formData.append('image', file);
 
-      const xhr = new XMLHttpRequest();
-      xhr.open('POST', '/api/analyzeImage', true);
+      try {
+        const response = await fetch('/api/analyzeImage', {
+          method: 'POST',
+          body: formData,
+        });
 
-      xhr.upload.onprogress = (event) => {
-        if (event.lengthComputable) {
-          const percentCompleted = Math.round((event.loaded * 100) / event.total);
-          setUploadProgress(percentCompleted);
-        }
-      };
+        const result: AnalysisResult = await response.json();
 
-      xhr.onload = () => {
         setIsLoading(false);
-        if (xhr.status === 200) {
-          try {
-            const result = JSON.parse(xhr.responseText);
-            if (result.error) {
-              setError(result.error);
-              setSuggestions([]);
-            } else if (result.analysis && result.analysis.suggestions) {
-              setError(null);
-              setSuggestions(result.analysis.suggestions);
-            } else {
-              throw new Error('Unexpected response format from the server.');
-            }
-          } catch (error) {
-            setError('Error parsing server response: ' + (error instanceof Error ? error.message : String(error)));
-            setSuggestions([]);
-          }
-        } else {
-          setError('An error occurred while analyzing the image.');
+        if (result.error) {
+          setError(result.error);
           setSuggestions([]);
+        } else if (result.analysis && result.analysis.suggestions) {
+          setError(null);
+          setSuggestions(result.analysis.suggestions);
+        } else {
+          throw new Error('Unexpected response format from the server.');
         }
-        setUploadProgress(0);
-      };
-
-      xhr.onerror = () => {
+      } catch (error) {
         setIsLoading(false);
         setError('An error occurred while analyzing the image.');
         setSuggestions([]);
-        setUploadProgress(0);
-      };
+      }
 
-      xhr.send(formData);
+      setUploadProgress(0);
     }
   }, [onImageUpload]);
 
@@ -91,11 +79,9 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onImageUpload, onSuggestionCl
     multiple: false
   });
 
-  const MotionDiv = motion.div;
-
   return (
     <div>
-      <MotionDiv
+      <motion.div
         className={`flex flex-col items-center justify-center w-full p-6 border-2 border-dashed rounded-lg cursor-pointer ${
           isDragActive ? 'border-blue-500 bg-blue-50' : 'border-gray-300'
         }`}
@@ -129,11 +115,11 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onImageUpload, onSuggestionCl
             </>
           )}
         </div>
-      </MotionDiv>
+      </motion.div>
       {error && (
         <p className="mt-4 text-red-500">{error}</p>
       )}
-      {suggestions && suggestions.length > 0 && (
+      {suggestions.length > 0 && (
         <div className="mt-4">
           <h3 className="text-lg font-semibold mb-2">Suggestions:</h3>
           <div className="flex flex-wrap gap-2">

@@ -61,7 +61,6 @@ export default function Home() {
 
   const handleImageUpload = (file: File) => {
     setUploadedImage(file);
-    console.log('Uploaded image:', file);
   };
 
   const handleSuggestionClick = (suggestion: string) => {
