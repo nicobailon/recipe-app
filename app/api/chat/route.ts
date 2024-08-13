@@ -47,26 +47,31 @@ export async function POST(req: Request) {
     schema: recipeSchema,
     onFinish: async ({object}) => {
       // uncomment below if you want to save the recipes to a JSON file in root folder
-      // try {
-      //   // Define the path to the file
-      //   const filePath = path.join(process.cwd(), "recipes.json");
-      //   // Read existing data from the file
-      //   let recipes: Recipe[] = [];
-      //   try {
-      //     const data = await fs.readFile(filePath, "utf8");
-      //     recipes = JSON.parse(data);
-      //   } catch (error) {
-      //     // If the file doesn't exist or is empty, we'll start with an empty array
-      //     console.log("No existing file found. Creating a new one.");
-      //   }
-      //   // Add the new recipe to the array
-      //   recipes.push(object.recipe);
-      //   // Write the updated array back to the file
-      //   await fs.writeFile(filePath, JSON.stringify(recipes, null, 2));
-      //   console.log("Recipe saved successfully");
-      // } catch (error) {
-      //   console.error("Error saving recipe:", error);
-      // }
+      try {
+        // Define the path to the file
+        const filePath = path.join(process.cwd(), "recipes.json");
+        // Read existing data from the file
+        let recipes: Recipe[] = [];
+        try {
+          const data = await fs.readFile(filePath, "utf8");
+          recipes = JSON.parse(data);
+        } catch (error) {
+          // If the file doesn't exist or is empty, we'll start with an empty array
+          console.log("No existing file found. Creating a new one.");
+        }
+        // Ensure object and object.recipe are not undefined
+        if (object && object.recipe) {
+          // Add the new recipe to the array
+          recipes.push(object.recipe);
+          // Write the updated array back to the file
+          await fs.writeFile(filePath, JSON.stringify(recipes, null, 2));
+          console.log("Recipe saved successfully");
+        } else {
+          console.error("Invalid recipe object");
+        }
+      } catch (error) {
+        console.error("Error saving recipe:", error);
+      }
     },
   });
 

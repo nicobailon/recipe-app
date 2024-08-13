@@ -12,6 +12,7 @@ import {toast} from "sonner";
 import Link from "next/link";
 import {Recipe, recipeSchema, PartialRecipe} from "@/app/api/chat/schema";
 import {sarcasticResponses} from "./responses.js";
+import ImageUpload from '@/components/ImageUpload';
 
 import RecipeView from "@/components/recipeView";
 
@@ -19,6 +20,7 @@ export default function Home() {
   const [input, setInput] = useState<string>("");
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [isValidating, setIsValidating] = useState(false);
+  const [uploadedImage, setUploadedImage] = useState<File | null>(null);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -32,7 +34,6 @@ export default function Home() {
         body: JSON.stringify({recipe: recipe}),
       });
       const data = await response.json();
-      // console.log(data.isValid);
       return data.isValid;
     } catch (error) {
       console.error("Error validating dish:", error);
@@ -44,7 +45,6 @@ export default function Home() {
     api: "/api/chat",
     schema: recipeSchema,
     onFinish({object}) {
-      // console.log("onFinish called with object:", object);
       if (object) {
         setRecipes((prev) => [object.recipe, ...prev]);
         setInput("");
@@ -59,12 +59,23 @@ export default function Home() {
     },
   });
 
+  const handleImageUpload = (file: File) => {
+    setUploadedImage(file);
+    console.log('Uploaded image:', file);
+  };
+
+  const handleSuggestionClick = (suggestion: string) => {
+    setInput(suggestion);
+    submit({recipe: suggestion});
+  };
+
   return (
     <div className="flex flex-col justify-center items-center min-h-screen h-fit bg-white dark:bg-zinc-900">
       <h1 className="text-4xl text-zinc-700 dark:text-zinc-300 py-4 font-semibold">
         Recipe Bro
       </h1>
-      <div className="flex flex-col justify-between gap-4">
+      <div className="flex flex-col justify-between gap-4 w-full max-w-[600px] px-4">
+        <ImageUpload onImageUpload={handleImageUpload} onSuggestionClick={handleSuggestionClick} />
         <form
           className="flex flex-col gap-2 relative items-center"
           onSubmit={async (event) => {
@@ -103,19 +114,21 @@ export default function Home() {
         </form>
 
         {recipes.length > 0 || isLoading ? (
-          <div className="flex flex-col gap-8 min-h-screen h-full w-dvw items-center">
-            {isLoading && object?.recipe && (
-              <div className="opacity-75">
-                <RecipeView recipe={object.recipe as PartialRecipe} />
-              </div>
-            )}
+          <div className="flex flex-col items-center justify-center min-h-screen w-full">
+            <div className="w-full max-w-[600px] px-4 md:px-0">
+              {isLoading && object?.recipe && (
+                <div className="opacity-75">
+                  <RecipeView recipe={object.recipe as PartialRecipe} />
+                </div>
+              )}
 
-            {recipes.map((recipe, index) => (
-              <RecipeView
-                key={`recipe-${index}-${recipe.name}`}
-                recipe={recipe}
-              />
-            ))}
+              {recipes.map((recipe, index) => (
+                <RecipeView
+                  key={`recipe-${index}-${recipe.name}`}
+                  recipe={recipe}
+                />
+              ))}
+            </div>
           </div>
         ) : (
           <motion.div className="h-full px-4 w-full md:w-[600px] md:px-0 pt-20">
