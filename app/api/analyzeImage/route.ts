@@ -43,6 +43,10 @@ export async function POST(req: Request) {
       model: openai("gpt-4o-mini"),
       messages: [
         {
+          role: 'system',
+          content: "You are an AI image analyzer specializing in food, restaurants, and locations.",
+        },
+        {
           role: 'user',
           content: [
             { type: 'text', text: "What's in this image?" },
@@ -66,7 +70,7 @@ export async function POST(req: Request) {
         {
           role: 'user',
           content: [
-            { type: 'text', text: `Based on this description of an image: "${initialResult.text}", determine if it's food, a restaurant, or a location. If it's food, suggest similar dishes. If it's a restaurant, suggest menu items. If it's a location, suggest appropriate food items for that location. Respond in JSON format with 'type' and 'suggestions' fields.` },
+            { type: 'text', text: `Based on this description of an image: "${initialResult.text}", determine if it's food, a restaurant, or a location. If it's food, suggest similar dishes (with the first dish being your best take at what the image is). If it's a restaurant, suggest top 5 most popular menu items from that restaurant or one like it. If it's a location, suggest 5 appropriate food items for that location in order of popularity. Respond in JSON format with 'type' and 'suggestions' fields.` },
           ],
         },
       ],
