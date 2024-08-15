@@ -13,6 +13,7 @@ import Link from "next/link";
 import {Recipe, recipeSchema, PartialRecipe} from "@/app/api/chat/schema";
 import {sarcasticResponses} from "./responses.js";
 import ImageUpload from '@/components/ImageUpload';
+import { Spinner } from '@/components/Spinner';
 
 import RecipeView from "@/components/recipeView";
 
@@ -21,6 +22,8 @@ export default function Home() {
   const [recipes, setRecipes] = useState<Recipe[]>([]);
   const [isValidating, setIsValidating] = useState(false);
   const [uploadedImage, setUploadedImage] = useState<File | null>(null);
+  const [suggestions, setSuggestions] = useState<string[]>([]);
+  const [isLoading, setIsLoading] = useState(false);
 
   const inputRef = useRef<HTMLInputElement>(null);
 
@@ -41,7 +44,7 @@ export default function Home() {
     }
   }
 
-  const {submit, isLoading, object} = experimental_useObject({
+  const {submit, isLoading: isLoadingObject, object} = experimental_useObject({
     api: "/api/chat",
     schema: recipeSchema,
     onFinish({object}) {
@@ -59,8 +62,38 @@ export default function Home() {
     },
   });
 
-  const handleImageUpload = (file: File) => {
+  const getSuggestionsFromImage = async (file: File): Promise<string[]> => {
+    const formData = new FormData();
+    formData.append('image', file);
+
+    const response = await fetch('/api/analyzeImage', {
+      method: 'POST',
+      body: formData,
+    });
+
+    if (!response.ok) {
+      throw new Error('Failed to analyze image');
+    }
+
+    const data = await response.json();
+    return data.analysis.suggestions;
+  };
+
+  const handleImageUpload = async (file: File) => {
     setUploadedImage(file);
+    setIsLoading(true);
+    try {
+      const suggestions = await getSuggestionsFromImage(file);
+      if (suggestions.length > 0) {
+        await submit({ recipe: suggestions[0] });
+        setSuggestions(suggestions.slice(1));
+      }
+    } catch (error) {
+      console.error('Error analyzing image:', error);
+      toast.error('Failed to analyze image. Please try again.');
+    } finally {
+      setIsLoading(false);
+    }
   };
 
   const handleSuggestionClick = (suggestion: string) => {
@@ -74,7 +107,7 @@ export default function Home() {
         Recipe Bro
       </h1>
       <div className="flex flex-col justify-between gap-4 w-full max-w-[600px] px-4">
-        <ImageUpload onImageUpload={handleImageUpload} onSuggestionClick={handleSuggestionClick} />
+        <ImageUpload onImageUpload={handleImageUpload} />
         <form
           className="flex flex-col gap-2 relative items-center"
           onSubmit={async (event) => {
@@ -112,8 +145,14 @@ export default function Home() {
           />
         </form>
 
-        {recipes.length > 0 || isLoading ? (
-          <div className="flex flex-col items-center justify-center min-h-screen w-full">
+        {isLoading && (
+          <div className="w-full flex justify-center">
+            <Spinner />
+          </div>
+        )}
+
+        {(recipes.length > 0 || (isLoading && object?.recipe)) && (
+          <div className="flex flex-col items-center justify-center w-full">
             <div className="w-full max-w-[600px] px-4 md:px-0">
               {isLoading && object?.recipe && (
                 <div className="opacity-75">
@@ -129,7 +168,26 @@ export default function Home() {
               ))}
             </div>
           </div>
-        ) : (
+        )}
+
+        {suggestions.length > 0 && (
+          <div className="mt-4">
+            <h3 className="text-lg font-semibold mb-2">More Suggestions:</h3>
+            <div className="flex flex-wrap gap-2">
+              {suggestions.map((suggestion, index) => (
+                <button
+                  key={index}
+                  onClick={() => handleSuggestionClick(suggestion)}
+                  className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
+                >
+                  {suggestion}
+                </button>
+              ))}
+            </div>
+          </div>
+        )}
+
+        {!recipes.length && !isLoading && (
           <motion.div className="h-full px-4 w-full md:w-[600px] md:px-0 pt-20">
             <div className="border rounded-lg p-6 flex flex-col gap-4 text-zinc-500 dark:text-zinc-400 dark:border-zinc-700  text-lg justify-center items-center">
               <p>Enter a recipe idea and recipe bro will generate it.</p>

@@ -22,6 +22,15 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onImageUpload, onSuggestionCl
   const [uploadProgress, setUploadProgress] = useState<number>(0);
   const [isLoading, setIsLoading] = useState<boolean>(false);
 
+  const handleImageUpload = async (file: File) => {
+    setUploadedImage(file);
+    const suggestions = await getSuggestionsFromImage(file);
+    if (suggestions.length > 0) {
+      onSuggestionClick(suggestions[0]);
+      setSuggestions(suggestions.slice(1));
+    }
+  };
+
   const onDrop = useCallback(async (acceptedFiles: File[]) => {
     if (acceptedFiles && acceptedFiles.length > 0) {
       const file = acceptedFiles[0];
@@ -118,22 +127,6 @@ const ImageUpload: React.FC<ImageUploadProps> = ({ onImageUpload, onSuggestionCl
       </motion.div>
       {error && (
         <p className="mt-4 text-red-500">{error}</p>
-      )}
-      {suggestions.length > 0 && (
-        <div className="mt-4">
-          <h3 className="text-lg font-semibold mb-2">Suggestions:</h3>
-          <div className="flex flex-wrap gap-2">
-            {suggestions.map((suggestion, index) => (
-              <button
-                key={index}
-                onClick={() => onSuggestionClick(suggestion)}
-                className="bg-blue-500 hover:bg-blue-600 text-white font-bold py-2 px-4 rounded"
-              >
-                {suggestion}
-              </button>
-            ))}
-          </div>
-        </div>
       )}
       {isLoading && (
         <p className="mt-4 text-blue-500">Analyzing image, please wait...</p>
